@@ -1,4 +1,4 @@
-# 1. the custom SSM document to execute the EKS pdate API call
+# 1. Custom SSM document to execute the EKS UpdateClusterConfig API operation
 resource "aws_ssm_document" "eks_logging_remediation" {
   name          = "Remediate-EnableEksLogging"
   document_type = "Automation"
