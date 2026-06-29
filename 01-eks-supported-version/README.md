@@ -1,6 +1,6 @@
 # Part 01 — EKS Supported Version
 
-> Part of the [aws-config-eks](../README.md) series — enforcing EKS compliance with AWS Config.
+> Part of the [aws-config-eks] series — enforcing EKS compliance with AWS Config.
 
 This project enforces that every Amazon EKS cluster in your AWS account runs a **supported Kubernetes version**. AWS regularly deprecates older Kubernetes versions, and running an unsupported version exposes your cluster to unpatched CVEs and loss of AWS support.
 
