@@ -69,6 +69,8 @@ This project enforces that every Amazon EKS cluster in your AWS account encrypts
 └─────────────────────────────────────────────────────────┘
 ```
 
+**Key design decision:** The `cloudposse/config/aws` module's built-in SNS topic is disabled (`create_sns_topic = false`). A custom SNS topic is provisioned in `notifications.tf` and fed exclusively via an EventBridge rule that filters for `Config Rules Compliance Change` events — preventing S3 delivery logs from flooding your inbox.
+
 ---
 
 ## Resources Created
@@ -173,9 +175,11 @@ terraform destroy
 
 ```bash
 aws configservice start-config-rules-evaluation \
-  --config-rule-names eks-secrets-encrypted \
-  --region eu-west-2
+    --config-rule-names eks-secrets-encrypted \
+    --region eu-west-2
 ```
+
+> If AWS returns `LimitExceededException`, the service is rate-limiting the request. Wait a few minutes and retry once; repeated back-to-back calls can trigger throttling. You can still inspect the current state with the compliance-status command below.
 
 ### View current compliance status
 
