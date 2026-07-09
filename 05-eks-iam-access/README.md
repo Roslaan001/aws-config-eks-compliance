@@ -2,7 +2,7 @@
 
 > Part of the [aws-config-eks](../README.md) series — enforcing EKS compliance with AWS Config.
 
-This project enforces IAM security best practices across your EKS architecture. Overly permissive execution roles and backdoor access policies represent a major threat. This project deploy an AWS Config rule to automatically audit customer-managed IAM policies to ensure they do not grant administrative wildcard privileges.
+This project enforces IAM security best practices across your EKS environment by auditing customer-managed IAM policies for wildcard administrative privileges. It is intentionally designed as a monitoring and alerting example: it creates a deliberately non-compliant policy so you can observe AWS Config reporting and notification behavior in practice.
 
 ---
 
@@ -25,7 +25,7 @@ This project enforces IAM security best practices across your EKS architecture. 
 
 | AWS Config Rule | `IAM_POLICY_NO_STATEMENTS_WITH_ADMIN_ACCESS` |
 |---|---|
-| **COMPLIANT** | All customer-managed IAM policies attached to EKS roles do not contain wildcard admin configurations (`Action = "*"` and `Resource = "*"`) |
+| **COMPLIANT** | All customer-managed IAM policies do not contain wildcard admin configurations (`Action = "*"` and `Resource = "*"`) |
 | **NON_COMPLIANT** | One or more customer-managed IAM policies contain wildcard admin configurations |
 | **Evaluation trigger** | On configuration change + periodic |
 
@@ -77,11 +77,10 @@ This project enforces IAM security best practices across your EKS architecture. 
 
 | File | Resource | Description |
 |---|---|---|
-| `eks.tf` | `module.eks` | Compliant EKS cluster (`my-cluster`, Kubernetes `1.35`) and standard node groups |
-| `iam-violation.tf` | `aws_iam_policy.wildcard_admin_backdoor` | Wildcard admin policy containing `Action = "*"` and `Resource = "*"` to trigger a non-compliant state |
+| `iam-violation.tf` | `aws_iam_policy.wildcard_admin_backdoor` | Deliberately non-compliant wildcard admin policy containing `Action = "*"` and `Resource = "*"` |
 | `main.tf` | `module.aws-config` | AWS Config recorder, delivery channel, and the `IAM_POLICY_NO_STATEMENTS_WITH_ADMIN_ACCESS` rule |
 | `s3-bucket.tf` | `aws_s3_bucket.config` | S3 bucket for AWS Config history |
-| `variables.tf` | — | Input variables for notifications |
+| `variables.tf` | — | Input variables for alerting and Slack integration |
 | `notifications.tf` | `aws_sns_topic.compliance_alerts` | Custom SNS topic for compliance alerts |
 | `notifications.tf` | `aws_cloudwatch_event_rule.compliance` | EventBridge compliance transition filter |
 | `notifications.tf` | `aws_chatbot_slack_channel_configuration.slack` | AWS Chatbot configuration mapping to Slack |
@@ -151,7 +150,7 @@ terraform destroy
 
 ## Outputs
 
-Exposes the EKS cluster configurations, rule outputs, and the offending wildcard admin policy ARN.
+The stack exposes the AWS Config recorder details, the SNS topic and Chatbot configuration ARNs, the deployed AWS Config rule name, and the wildcard admin policy name/ARN created for testing.
 
 ---
 

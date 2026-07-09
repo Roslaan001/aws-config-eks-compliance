@@ -1,6 +1,6 @@
 # aws-config-eks
 
-A seven-part Terraform series for enforcing **EKS compliance policies** using **AWS Config**, with automated alerting via **Amazon SNS** and **Amazon EventBridge**.
+A multi-part Terraform series for enforcing **EKS compliance policies** using **AWS Config**, with automated alerting via **Amazon SNS** and **Amazon EventBridge**.
 
 Each part is an independent, self-contained Terraform project targeting a specific compliance use case for Amazon Elastic Kubernetes Service (EKS) clusters.
 
@@ -15,7 +15,7 @@ Each part is an independent, self-contained Terraform project targeting a specif
 | 03 | [`03-eks-endpoint-access`](./03-eks-endpoint-access/) | `EKS_ENDPOINT_NO_PUBLIC_ACCESS` | EKS cluster API endpoint public access is disabled/restricted (with optional auto-remediation) |
 | 04 | [`04-eks-secrets-encryption`](./04-eks-secrets-encryption/) | `EKS_SECRETS_ENCRYPTED` | Kubernetes secrets are encrypted at rest using AWS KMS |
 | 05 | [`05-eks-iam-access`](./05-eks-iam-access/) | `IAM_POLICY_NO_STATEMENTS_WITH_ADMIN_ACCESS` | Customer managed policies do not grant wildcard admin access |
-| 06 | [`aws-security-dashboard-monitoring`](../aws-security-dashboard-monitoring/) | Security Hub / CloudWatch Dashboard | Unified compliance reporting dashboard and security scores (Extracted to separate repository) |
+| 06 | [`aws-security-dashboard-monitoring`](../aws-security-dashboard-monitoring/) | Security Hub / CloudWatch Dashboard | Unified compliance reporting dashboard and security scores (maintained in a separate repository) |
 
 ---
 
@@ -77,7 +77,7 @@ slack_channel_id = "C0123456789"   # Optional — Slack Channel ID
 
 ## Deploying a Project
 
-Each project is deployed independently:
+Each project is deployed independently from its own folder:
 
 ```bash
 cd <project-folder>
@@ -86,7 +86,7 @@ terraform plan
 terraform apply
 ```
 
-See the README inside each folder for project-specific details.
+See the README inside each folder for project-specific details, especially for any one-time setup such as Slack authorization or IAM prerequisites.
 
 ---
 
@@ -135,9 +135,12 @@ aws-config-eks/
 └── 05-eks-iam-access/
     ├── README.md
     ├── main.tf
-    ├── eks.tf
     ├── iam-violation.tf
-    └── ...
+    ├── notifications.tf
+    ├── output.tf
+    ├── s3-bucket.tf
+    ├── terraform.tfvars
+    └── variables.tf
 ```
 
 ---

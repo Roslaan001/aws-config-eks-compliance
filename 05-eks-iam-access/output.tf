@@ -18,19 +18,19 @@ output "sns_subscription_arn" {
   description = "The ARN of the email subscription"
 }
 
-output "eks_cluster_name" {
-  value       = module.eks.cluster_name
-  description = "The name of the EKS cluster"
-}
-
-output "eks_cluster_arn" {
-  value       = module.eks.cluster_arn
-  description = "The ARN of the EKS cluster"
-}
-
 output "chatbot_slack_arn" {
   value       = aws_chatbot_slack_channel_configuration.slack.chat_configuration_arn
   description = "The ARN of the AWS Chatbot Slack channel configuration"
+}
+
+output "config_rule_name" {
+  value       = "IAM_POLICY_NO_STATEMENTS_WITH_ADMIN_ACCESS"
+  description = "The AWS Config managed rule deployed by this stack"
+}
+
+output "violation_policy_name" {
+  value       = aws_iam_policy.wildcard_admin_backdoor.name
+  description = "The name of the wildcard admin policy created for testing"
 }
 
 output "violation_policy_arn" {
