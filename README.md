@@ -15,7 +15,6 @@ Each part is an independent, self-contained Terraform project targeting a specif
 | 03 | [`03-eks-endpoint-access`](./03-eks-endpoint-access/) | `EKS_ENDPOINT_NO_PUBLIC_ACCESS` | EKS cluster API endpoint public access is disabled/restricted (with optional auto-remediation) |
 | 04 | [`04-eks-secrets-encryption`](./04-eks-secrets-encryption/) | `EKS_SECRETS_ENCRYPTED` | Kubernetes secrets are encrypted at rest using AWS KMS |
 | 05 | [`05-eks-iam-access`](./05-eks-iam-access/) | `IAM_POLICY_NO_STATEMENTS_WITH_ADMIN_ACCESS` | Customer managed policies do not grant wildcard admin access |
-| 06 | [`aws-security-dashboard-monitoring`](../aws-security-dashboard-monitoring/) | Security Hub / CloudWatch Dashboard | Unified compliance reporting dashboard and security scores (maintained in a separate repository) |
 
 ---
 
