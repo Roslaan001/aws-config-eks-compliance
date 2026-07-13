@@ -23,7 +23,7 @@ module "aws-config" {
       identifier       = "IAM_POLICY_NO_STATEMENTS_WITH_ADMIN_ACCESS",
       enabled          = true
       tags             = { "eks-test" = "true" }
-      input_parameters = null
+      input_parameters = {}
+      }
     }
   }
-}
