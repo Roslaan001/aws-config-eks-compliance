@@ -5,6 +5,7 @@
 # this entire block, then run `terraform apply`.
 # ==============================================================================
 
+/*
 # 1. Custom SSM Document to execute the EKS Update API call to restrict endpoint access
 resource "aws_ssm_document" "eks_endpoint_remediation" {
   name          = "Remediate-DisableEksPublicEndpoint"
@@ -101,4 +102,5 @@ resource "aws_config_remediation_configuration" "eks_endpoint_auto_fix" {
     aws_iam_role_policy.eks_remediation_policy
   ]
 }
+*/
 

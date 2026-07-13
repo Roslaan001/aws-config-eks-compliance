@@ -78,21 +78,30 @@ This project enforces that every Amazon EKS cluster in your AWS account runs a *
 
 ## Resources Created
 
-| File | Resource | Description |
+| File | Resource / Data Source | Description |
 |---|---|---|
-| `eks.tf` | `module.eks` | EKS cluster (`my-cluster`, Kubernetes `1.31`) with managed node group |
 | `main.tf` | `module.aws-config` | AWS Config recorder, delivery channel, and the `EKS_CLUSTER_SUPPORTED_VERSION` managed rule |
+| `eks.tf` | `data.aws_vpc.default` | Data source looking up the default VPC |
+| `eks.tf` | `data.aws_subnets.default` | Data source looking up subnets in the default VPC |
+| `eks.tf` | `data.aws_iam_role.lab_role` | Data source looking up the existing `LabRole` IAM role |
+| `eks.tf` | `module.eks` | EKS cluster (`my-cluster`, Kubernetes `1.31`) with managed node group |
+| `s3-bucket.tf` | `data.aws_caller_identity.current` | Data source used to make the S3 bucket name unique per account |
 | `s3-bucket.tf` | `aws_s3_bucket.config` | S3 bucket for AWS Config configuration history snapshots |
+| `s3-bucket.tf` | `aws_s3_bucket_public_access_block.config` | Blocks public access to the AWS Config history bucket |
+| `s3-bucket.tf` | `data.aws_iam_policy_document.config_bucket_policy` | Generates the S3 bucket policy JSON |
 | `s3-bucket.tf` | `aws_s3_bucket_policy.config` | Bucket policy granting AWS Config write access |
 | `variables.tf` | — | Declares input variables for the email and Slack configuration |
 | `notifications.tf` | `aws_sns_topic.compliance_alerts` | Custom SNS topic: `eks-supported-version-compliance-alerts` |
+| `notifications.tf` | `data.aws_iam_policy_document.sns_publish_policy` | Generates the SNS topic policy JSON |
 | `notifications.tf` | `aws_sns_topic_policy.compliance` | Allows EventBridge to publish to the SNS topic |
 | `notifications.tf` | `aws_cloudwatch_event_rule.compliance` | EventBridge rule matching `Config Rules Compliance Change` |
 | `notifications.tf` | `aws_cloudwatch_event_target.sns` | Routes EventBridge events to the SNS topic |
 | `notifications.tf` | `aws_sns_topic_subscription.email` | Email subscription to the SNS topic |
 | `notifications.tf` | `aws_iam_role.chatbot` | IAM role assumed by AWS Chatbot |
+| `notifications.tf` | `aws_iam_role_policy_attachment.chatbot_read_only` | Attaches `ReadOnlyAccess` to the Chatbot role |
 | `notifications.tf` | `aws_chatbot_slack_channel_configuration.slack` | AWS Chatbot configuration mapping the Slack workspace and channel to SNS |
-| `terraform.tfvars` | — | Local variables file (ignored by Git) for storing your real email and Slack IDs |
+| `output.tf` | — | Stack outputs (recorder ID, bucket name, ARNs, rule name, EKS details) |
+| `terraform.tfvars` | — | Local variables override values file (ignored by Git) |
 
 ---
 
@@ -131,7 +140,7 @@ AWS Chatbot Slack configurations require a one-time manual OAuth flow in the AWS
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `alert_email` | `string` | `"youremail@gmail.com"` | Email address to receive compliance alerts |
+| `alert_email` | `string` | `"your-email@example.com"` | Email address to receive compliance alerts |
 | `slack_team_id` | `string` | `"T0000000000"` | Slack Workspace ID |
 | `slack_channel_id` | `string` | `"C0000000000"` | Slack Channel ID |
 
@@ -235,11 +244,13 @@ A confirmed subscription shows a full ARN in the `SubscriptionArn` column. `Pend
 
 ## Troubleshooting
 
-### No alert email received after re-evaluation
-
-1. Check your **spam / junk folder** — sender is `no-reply@sns.amazonaws.com`
-2. Check your **Gmail Promotions tab**
-3. Verify the subscription is confirmed (see [Checking Compliance](#checking-compliance) above)
-4. Note: AWS Config only fires an alert on a **state transition**. If the cluster was already `NON_COMPLIANT` before you subscribed, re-trigger an evaluation to force a fresh notification
+| Problem | Cause | Fix |
+|---|---|---|
+| No alert email received after re-evaluation | SNS email subscription is pending confirmation, or no state transition occurred | 1. Check your **spam/junk folder** (sender: `no-reply@sns.amazonaws.com`). <br>2. Confirm the subscription (see [Checking Compliance](#checking-compliance)). <br>3. EventBridge triggers only on state transition. If the resource was already non-compliant, trigger a fresh check after changing EKS config. |
+| `terraform apply` fails on `aws_chatbot_slack_channel_configuration` | Slack workspace is not authorized in AWS Chatbot | Open **AWS Chatbot → Configured clients → Slack → Configure client** in the AWS Console and complete authorization. See [Slack Authorization Setup](#slack-authorization-setup). |
+| `Error: Configuration recorder already exists` | A Config recorder is already enabled in this region / account | AWS only allows one configuration recorder per region. You must import the existing recorder to manage it via Terraform or delete it before applying. |
+| Slack messages not appearing in the channel | Chatbot lacks role permissions, or workspace/channel IDs are incorrect, or the bot isn't in the channel | 1. Double-check your `slack_team_id` and `slack_channel_id` variables. <br>2. Invite the AWS Chatbot application to your Slack channel by typing `/invite @aws` in Slack. |
+| `BucketAlreadyExists` or name collision during apply | S3 bucket names must be globally unique | By default, the S3 bucket name uses the format `aws-config-eks-supported-bucket-${data.aws_caller_identity.current.account_id}`. If another user in your account or elsewhere has taken the name, modify the bucket naming scheme in `s3-bucket.tf` or override the provider account. |
+| EKS Cluster creation takes too long or fails | Network or IAM issues | Verify that your AWS CLI user has permissions to create VPCs, IAM roles, and EKS resources. Cluster creation can take 10-20 minutes normally. |
 
 
