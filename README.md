@@ -96,6 +96,7 @@ See the README inside each folder for project-specific details, especially for a
 aws-config-eks/
 ├── README.md                            ← You are here
 ├── .gitignore
+├── context.md
 │
 ├── 01-eks-supported-version/
 │   ├── README.md
@@ -122,25 +123,32 @@ aws-config-eks/
 │   ├── README.md
 │   ├── main.tf
 │   ├── eks.tf
-│   ├── auto-rem.tf                      ← Optional auto-remediation (Commented out)
-│   └── ...
+│   ├── s3-bucket.tf
+│   ├── variables.tf
+│   ├── notifications.tf
+│   ├── auto-rem.tf                      ← Optional auto-remediation
+│   ├── output.tf
+│   └── terraform.tfvars
 │
 ├── 04-eks-secrets-encryption/
 │   ├── README.md
 │   ├── main.tf
-│   ├── kms.tf
 │   ├── eks.tf
-│   └── ...
+│   ├── s3-bucket.tf
+│   ├── variables.tf
+│   ├── notifications.tf
+│   ├── output.tf
+│   └── terraform.tfvars
 │
 └── 05-eks-iam-access/
     ├── README.md
     ├── main.tf
     ├── iam-violation.tf
+    ├── s3-bucket.tf
+    ├── variables.tf
     ├── notifications.tf
     ├── output.tf
-    ├── s3-bucket.tf
-    ├── terraform.tfvars
-    └── variables.tf
+    └── terraform.tfvars
 ```
 
 ---
