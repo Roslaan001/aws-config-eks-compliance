@@ -77,13 +77,24 @@ This project enforces IAM security best practices across your EKS environment by
 
 | File | Resource | Description |
 |---|---|---|
-| `iam-violation.tf` | `aws_iam_policy.wildcard_admin_backdoor` | Deliberately non-compliant wildcard admin policy containing `Action = "*"` and `Resource = "*"` |
 | `main.tf` | `module.aws-config` | AWS Config recorder, delivery channel, and the `IAM_POLICY_NO_STATEMENTS_WITH_ADMIN_ACCESS` rule |
+| `iam-violation.tf` | `aws_iam_policy.wildcard_admin_backdoor` | Deliberately non-compliant wildcard admin policy containing `Action = "*"` and `Resource = "*"` |
+| `s3-bucket.tf` | `data.aws_caller_identity.current` | Data source used to make the S3 bucket name unique per account |
 | `s3-bucket.tf` | `aws_s3_bucket.config` | S3 bucket for AWS Config history |
-| `variables.tf` | — | Input variables for alerting and Slack integration |
+| `s3-bucket.tf` | `aws_s3_bucket_public_access_block.config` | Blocks all public access to the Config S3 bucket |
+| `s3-bucket.tf` | `data.aws_iam_policy_document.config_bucket_policy` | IAM policy document granting AWS Config access to the bucket |
+| `s3-bucket.tf` | `aws_s3_bucket_policy.config` | Bucket policy allowing AWS Config to deliver objects |
 | `notifications.tf` | `aws_sns_topic.compliance_alerts` | Custom SNS topic for compliance alerts |
-| `notifications.tf` | `aws_cloudwatch_event_rule.compliance` | EventBridge compliance transition filter |
-| `notifications.tf` | `aws_chatbot_slack_channel_configuration.slack` | AWS Chatbot configuration mapping to Slack |
+| `notifications.tf` | `aws_sns_topic_policy.compliance` | SNS topic policy allowing EventBridge to publish |
+| `notifications.tf` | `data.aws_iam_policy_document.sns_publish_policy` | IAM policy document for the SNS publish permission |
+| `notifications.tf` | `aws_cloudwatch_event_rule.compliance` | EventBridge rule matching Config compliance state changes |
+| `notifications.tf` | `aws_cloudwatch_event_target.sns` | EventBridge target routing compliance events to the SNS topic |
+| `notifications.tf` | `aws_sns_topic_subscription.email` | Email subscription on the SNS topic |
+| `notifications.tf` | `aws_iam_role.chatbot` | IAM role assumed by AWS Chatbot |
+| `notifications.tf` | `aws_iam_role_policy_attachment.chatbot_read_only` | Attaches `ReadOnlyAccess` to the Chatbot role |
+| `notifications.tf` | `aws_chatbot_slack_channel_configuration.slack` | AWS Chatbot Slack channel configuration linked to the SNS topic |
+| `variables.tf` | — | Input variables for alerting and Slack integration |
+| `output.tf` | — | Stack outputs (recorder ID, bucket name, ARNs, rule name, violation policy) |
 | `terraform.tfvars` | — | Local variables file (ignored by Git) |
 
 ---
@@ -150,7 +161,16 @@ terraform destroy
 
 ## Outputs
 
-The stack exposes the AWS Config recorder details, the SNS topic and Chatbot configuration ARNs, the deployed AWS Config rule name, and the wildcard admin policy name/ARN created for testing.
+| Output | Description |
+|---|---|
+| `config_recorder_id` | The ID of the AWS Config configuration recorder |
+| `config_s3_bucket_name` | The name of the S3 bucket created for AWS Config history |
+| `sns_topic_arn` | The ARN of the custom SNS topic for compliance alerts |
+| `sns_subscription_arn` | The ARN of the email subscription |
+| `chatbot_slack_arn` | The ARN of the AWS Chatbot Slack channel configuration |
+| `config_rule_name` | The AWS Config managed rule deployed by this stack |
+| `violation_policy_name` | The name of the wildcard admin policy created for testing |
+| `violation_policy_arn` | The ARN of the wildcard admin policy created for testing |
 
 ---
 
@@ -198,3 +218,15 @@ To restore compliance, delete the non-compliant policy using the console or the 
 ```bash
 aws iam delete-policy --policy-arn <violation_policy_arn>
 ```
+
+---
+
+## Troubleshooting
+
+| Problem | Cause | Fix |
+|---|---|---|
+| `terraform apply` fails on `aws_chatbot_slack_channel_configuration` | The one-time Slack OAuth flow has not been completed in the AWS Console | Open **AWS Chatbot → Configured clients → Slack → Configure client** and complete the authorization. See [Slack Authorization Setup](#slack-authorization-setup). |
+| No email notifications received after deployment | The SNS email subscription is pending confirmation | Check the inbox for `alert_email` and click the **Confirm subscription** link sent by AWS. |
+| `Error: Configuration recorder already exists` | Only one Config recorder is allowed per region per account | Import the existing recorder (`terraform import`) or remove it before deploying. |
+| EventBridge rule never triggers | AWS Config has not re-evaluated the rule yet | Manually trigger an evaluation — see [Trigger an immediate evaluation](#trigger-an-immediate-evaluation). |
+| Slack messages not appearing | Chatbot role lacks permissions, or the channel ID is wrong | Verify `slack_channel_id` is correct and that the Chatbot app has been invited to the channel (`/invite @aws`). |
